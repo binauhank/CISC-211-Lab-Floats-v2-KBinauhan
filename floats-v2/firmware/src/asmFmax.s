@@ -2,11 +2,11 @@
 #include <xc.h>
 .syntax unified
 
-@ Declare the following to be in data memory
+/* Declare the following to be in data memory */
 .data  
 .align
 
-@ Define the globals so that the C code can access them
+/* Define the globals so that the C code can access them */
 
 /* create a string */
 .global nameStr
@@ -42,21 +42,21 @@ nameStrPtr: .word nameStr   /* Assign the mem loc of nameStr to nameStrPtr */
 .type mant1,%gnu_unique_object
  
 .align
-@ use these locations to store f0 values
+/* use these locations to store f0 values */
 f0: .word 0
 sb0: .word 0
 storedExp0: .word 0  /* the unmodified 8b exp value extracted from the float */
 realExp0: .word 0
 mant0: .word 0
  
-@ use these locations to store f1 values
+/* use these locations to store f1 values */
 f1: .word 0
 sb1: .word 0
 realExp1: .word 0
 storedExp1: .word 0  /* the unmodified 8b exp value extracted from the float */
 mant1: .word 0
  
-@ use these locations to store fMax values
+/* use these locations to store fMax values */
 fMax: .word 0
 sbMax: .word 0
 storedExpMax: .word 0
@@ -67,7 +67,7 @@ mantMax: .word 0
 .type nanValue,%gnu_unique_object
 nanValue: .word 0x7FFFFFFF            
 
-@ Tell the assembler that what follows is in instruction memory    
+/* Tell the assembler that what follows is in instruction memory     */
 .text
 .align
 
