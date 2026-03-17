@@ -13,7 +13,7 @@
 .type nameStr,%gnu_unique_object
     
 /*** STUDENTS: Change the next line to your name!  **/
-nameStr: .asciz "Inigo Montoya"  
+nameStr: .asciz "Kristian Binauhan"  
  
 .align
 
@@ -80,7 +80,49 @@ nanValue: .word 0x7FFFFFFF
  .type initVariables,%function
 initVariables:
     /* YOUR initVariables CODE BELOW THIS LINE! Don't forget to follow the calling convention! */
-
+    push {r4-r11, LR}
+    
+    MOV R4, 0
+    
+    /* f0* variables */
+    LDR R5, =f0
+    STR R4, [R5]
+    LDR R5, =sb0
+    STR R4, [R5]
+    LDR R5, =storedExp0
+    STR R4, [R5]
+    LDR R5, =realExp0
+    STR R4, [R5]
+    LDR R5, =mant0
+    STR R4, [R5]
+    
+    /* f1* variables */
+    LDR R5, =f1
+    STR R4, [R5]
+    LDR R5, =sb1
+    STR R4, [R5]
+    LDR R5, =storedExp1
+    STR R4, [R5]
+    LDR R5, =realExp1
+    STR R4, [R5]
+    LDR R5, =mant1
+    STR R4, [R5]
+    
+    /* *Max variables */
+    LDR R5, =fMax
+    STR R4, [R5]
+    LDR R5, =sbMax
+    STR R4, [R5]
+    LDR R5, =storedExpMax
+    STR R4, [R5]
+    LDR R5, =realExpMax
+    STR R4, [R5]
+    LDR R5, =mantMax
+    STR R4, [R5]
+    
+    pop {r4-r11, LR}
+    
+    BX LR
     /* YOUR initVariables CODE ABOVE THIS LINE! Don't forget to follow the calling convention! */
 
     
@@ -97,7 +139,15 @@ initVariables:
 .type getSignBit,%function
 getSignBit:
     /* YOUR getSignBit CODE BELOW THIS LINE! Don't forget to follow the calling convention! */
-
+    push {r4-r11, LR}
+    
+    LDR R0, [R0]
+    LSR R0, R0, 31
+    STR R0, [R1]
+    
+    pop {r4-r11, LR}
+    
+    BX LR
     /* YOUR getSignBit CODE ABOVE THIS LINE! Don't forget to follow the calling convention! */
     
 
@@ -118,7 +168,17 @@ getSignBit:
 .type getExponent,%function
 getExponent:
     /* YOUR getExponent CODE BELOW THIS LINE! Don't forget to follow the calling convention! */
+    push {r4-r11, LR}
     
+    LDR R0, [R0]
+    LSL R0, R0, 1 /* Remove sign bit */
+    LSR R0, R0, 24 /* Isolate stored exponent */
+    
+    SUB R1, R0, 127 /* Find real exponent, store in R1 (R0 - 127) */
+    
+    pop {r4-r11, LR}
+    
+    BX LR
     /* YOUR getExponent CODE ABOVE THIS LINE! Don't forget to follow the calling convention! */
    
 
@@ -136,7 +196,17 @@ getExponent:
 .type getMantissa,%function
 getMantissa:
     /* YOUR getMantissa CODE BELOW THIS LINE! Don't forget to follow the calling convention! */
+    push {r4-r11, LR}
     
+    LDR R0, [R0]
+    LSL R0, R0, 10
+    LSR R0, R0, 10 /* Isolate mantissa without bit 23 */
+    
+    ORR R1, R0, 0x400000 /* Set bit 23 to 1, store in R1 */
+    
+    pop {r4-r11, LR}
+    
+    BX LR
     /* YOUR getMantissa CODE ABOVE THIS LINE! Don't forget to follow the calling convention! */
    
 
@@ -156,7 +226,18 @@ getMantissa:
 .type asmIsZero,%function
 asmIsZero:
     /* YOUR asmIsZero CODE BELOW THIS LINE! Don't forget to follow the calling convention! */
+    push {r4-r11, LR}
     
+    LDR R4, [R0]
+    CMP R4, 0
+    MOVNE R0, 0 /* Set to 0 if value is not +/- 0 */
+    MOVEQ R0, 1 /* Set to 1 if value is +0 */
+    CMP R4, 0x80000000
+    MOVEQ R0, -1 /* Set to -1 if value is -0 */
+    
+    pop {r4-r11, LR}
+    
+    BX LR
     /* YOUR asmIsZero CODE ABOVE THIS LINE! Don't forget to follow the calling convention! */
    
 
@@ -176,7 +257,18 @@ asmIsZero:
 .type asmIsInf,%function
 asmIsInf:
     /* YOUR asmIsInf CODE BELOW THIS LINE! Don't forget to follow the calling convention! */
-
+    push {r4-r11, LR}
+    
+    LDR R4, [R0]
+    CMP R4, 0x7F800000
+    MOVNE R0, 0 /* Set to 0 if not +/- infinity */
+    MOVEQ R0, 1 /* Set to 1 if +infinity */
+    CMP R4, 0xFF800000
+    MOVEQ R0, -1 /* Set to -1 if -infinity */
+    
+    pop {r4-r11, LR}
+    
+    BX LR
     /* YOUR asmIsInf CODE ABOVE THIS LINE! Don't forget to follow the calling convention! */
    
 
@@ -217,7 +309,193 @@ asmFmax:
     /* DON'T FORGET TO FOLLOW THE CALLING CONVENTION!  */
 
     /* YOUR asmFmax CODE BELOW THIS LINE! VVVVVVVVVVVVVVVVVVVVV  */
-
+    push {r4-r11, LR}
+    
+    /* Unpacking f0 */
+    LDR R4, =f0
+    STR R0, [R4]
+    
+    /* f0 Sign Bit */
+    LDR R0, =f0
+    LDR R1, =sb0
+    BL getSignBit
+    
+    /* f0 Exponent */
+    LDR R0, =f0
+    BL getExponent
+    LDR R4, =storedExp0
+    STR R0, [R4]
+    LDR R4, =realExp0
+    CMP R0, 0
+    MOVEQ R1, -126
+    STR R1, [R4]
+    
+    /* f0 Mantissa */
+    LDR R0, =f0
+    BL getMantissa
+    LDR R4, =mant0
+    LDR R5, =storedExp0
+    LDR R5, [R5]
+    CMP R5, 0
+    STREQ R0, [R4]
+    CMP R5, 255
+    STREQ R0, [R4] /* If storedExp0 = 0 or 255, bit 23 is NOT set */
+    STRNE R1, [R4] /* Otherwise, store with bit 23 set */
+    
+    /* Unpacking f1 */
+    LDR R4, =f1
+    STR R1, [R4]
+    
+    /* f1 Sign Bit */
+    LDR R0, =f1
+    LDR R1, =sb1
+    BL getSignBit
+    
+    /* f1 Exponent */
+    LDR R0, =f1
+    BL getExponent
+    LDR R4, =storedExp1
+    STR R0, [R4]
+    LDR R4, =realExp1
+    CMP R0, 0
+    MOVEQ R1, -126
+    STR R1, [R4]
+    
+    /* f1 Mantissa */
+    LDR R0, =f1
+    BL getMantissa
+    LDR R4, =mant1
+    LDR R5, =storedExp1
+    LDR R5, [R5]
+    CMP R5, 0
+    STREQ R0, [R4]
+    CMP R5, 255
+    STREQ R0, [R4]
+    STRNE R1, [R4]
+    
+    /* Check for +/-infinity in f0 */
+    LDR R0, =f0
+    BL asmIsInf
+    
+    /* If f0 is +infinity */
+    CMP R0, 1
+    BEQ f0_is_larger
+    
+    /* If f0 is -infinity */
+    CMP R0, -1
+    BEQ f1_is_larger
+    
+    /* Check for +/-infinity in f1 */
+    LDR R0, =f1
+    BL asmIsInf
+    
+    /* If f1 is +infinity */
+    CMP R0, 1
+    BEQ f1_is_larger
+    
+    /* If f1 is -infinity */
+    CMP R0, -1
+    BEQ f0_is_larger
+    
+    /* Check sign bits */
+    LDR R4, =sb0
+    LDR R4, [R4]
+    LDR R5, =sb1
+    LDR R5, [R5]
+    EOR R6, R4, R5 /* Check if matching bits */
+    CMP R6, 1 /* 1 = bits are not matching and must find the positive value */
+    BEQ find_positive_sign
+    
+    /* Check realExp */
+    LDR R4, =realExp0
+    LDR R4, [R4]
+    LDR R5, =realExp1
+    LDR R5, [R5]
+    CMP R4, R5
+    BNE find_larger_exp
+    
+    /* Check mantissa */
+    LDR R4, =mant0
+    LDR R4, [R4]
+    LDR R5, =mant1
+    LDR R5, [R5]
+    CMP R4, R5
+    BNE find_larger_mant
+    
+    /* Both values are equal */
+    BL f0_is_larger
+    
+find_positive_sign:
+    CMP R4, 0 /* 0 = positive */
+    BEQ f0_is_larger
+    BNE f1_is_larger
+    
+find_larger_exp:
+    CMP R4, R5
+    BGT f0_is_larger
+    BLT f1_is_larger
+    
+find_larger_mant:
+    CMP R4, R5
+    BGT f0_is_larger
+    BLT f1_is_larger
+    
+f0_is_larger:
+    /* Set all f0 fields to fMax */
+    LDR R4, =f0
+    LDR R4, [R4]
+    LDR R5, =fMax
+    STR R4, [R5]
+    LDR R4, =sb0
+    LDR R4, [R4]
+    LDR R5, =sbMax
+    STR R4, [R5]
+    LDR R4, =storedExp0
+    LDR R4, [R4]
+    LDR R5, =storedExpMax
+    STR R4, [R5]
+    LDR R4, =realExp0
+    LDR R4, [R4]
+    LDR R5, =realExpMax
+    STR R4, [R5]
+    LDR R4, =mant0
+    LDR R4, [R4]
+    LDR R5, =mantMax
+    STR R4, [R5]
+    
+    LDR R0, =fMax
+    pop {r4-r11, LR}
+    
+    BX LR
+    
+f1_is_larger:
+    /* Set all f1 fields to fMax */
+    LDR R4, =f1
+    LDR R4, [R4]
+    LDR R5, =fMax
+    STR R4, [R5]
+    LDR R4, =sb1
+    LDR R4, [R4]
+    LDR R5, =sbMax
+    STR R4, [R5]
+    LDR R4, =storedExp1
+    LDR R4, [R4]
+    LDR R5, =storedExpMax
+    STR R4, [R5]
+    LDR R4, =realExp1
+    LDR R4, [R4]
+    LDR R5, =realExpMax
+    STR R4, [R5]
+    LDR R4, =mant1
+    LDR R4, [R4]
+    LDR R5, =mantMax
+    STR R4, [R5]
+    
+    LDR R0, =fMax
+    pop {r4-r11, LR}
+    
+    BX LR
+    
     /* YOUR asmFmax CODE ABOVE THIS LINE! ^^^^^^^^^^^^^^^^^^^^^  */
 
    

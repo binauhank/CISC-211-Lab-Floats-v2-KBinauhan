@@ -67,7 +67,7 @@
 //           set debug_mode to true
 //           set debug_testcase to the test case you want to test.
 bool     debug_mode = false;
-uint32_t debug_testcase = 2;
+uint32_t debug_testcase = 11;
 
 // STUDENTS: if you don't want to run all three test types, 
 //           set the ones you don't want to run to false. But 
